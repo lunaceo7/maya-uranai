@@ -34,6 +34,11 @@ export default function App() {
     setLoading(true); setResult(""); setStep(3);
     const pat = PATTERNS.find(p => p.id === selected);
     const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      setResult("❌ APIキーが未設定です。VercelのVITE_ANTHROPIC_API_KEYを確認してください。");
+      setLoading(false);
+      return;
+    }
     const content = `【鑑定対象】名前:${form.name||"不明"} 性別:${form.gender||"不明"} KIN番号:${form.kin} 太陽の紋章:${form.taiyo||"不明"} ウェイブスペル:${form.wave||"不明"} 銀河の音:${form.ginga||"不明"}\n【相関KIN】ガイド:${form.guide||"不明"} 反対:${form.hantai||"不明"} 神秘:${form.shinpi||"不明"} 類似:${form.ruiji||"不明"} 鏡の向こう:${form.kagami||"不明"} 絶対反対:${form.zettai||"不明"}${form.nayami?`\n【悩み】${form.nayami}`:""}${form.other?`\n【その他】${form.other}`:""}`;
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -45,7 +50,7 @@ export default function App() {
           "anthropic-dangerous-direct-browser-access":"true"
         },
         body: JSON.stringify({
-          model:"claude-opus-4-5",
+          model:"claude-haiku-4-5-20251001",
           max_tokens:2000,
           system: pat.system,
           messages:[{ role:"user", content }]
@@ -53,13 +58,13 @@ export default function App() {
       });
       const data = await res.json();
       if (data.error) {
-        setResult(`エラー：${data.error.message}`);
+        setResult(`❌ APIエラー：${data.error.type} / ${data.error.message}`);
       } else {
         const text = data.content?.map(i=>i.text||"").join("") || "生成に失敗しました。";
         setResult(text);
       }
     } catch(e) {
-      setResult(`エラー詳細：${e.message}`);
+      setResult(`❌ 通信エラー：${e.message}`);
     } finally { setLoading(false); }
   };
 
