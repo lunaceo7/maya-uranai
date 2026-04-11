@@ -50,7 +50,7 @@ export default function App() {
           "anthropic-dangerous-direct-browser-access":"true"
         },
         body: JSON.stringify({
-          model:"claude-haiku-4-5-20251001",
+          model:"claude-haiku-4-5",
           max_tokens:2000,
           system: pat.system,
           messages:[{ role:"user", content }]
@@ -60,7 +60,7 @@ export default function App() {
       if (data.error) {
         setResult(`❌ APIエラー：${data.error.type} / ${data.error.message}`);
       } else {
-        const text = data.content?.map(i=>i.text||"").join("") || "生成に失敗しました。";
+        const text = data.content?.map(i=>i.text||"").join("") || "❌ 응답 없음：" + JSON.stringify(data).slice(0,200);
         setResult(text);
       }
     } catch(e) {
