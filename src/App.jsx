@@ -1,5 +1,5 @@
 import { useState } from "react";
-　
+
 const TAIYO = ["赤い龍","白い風","青い夜","黄色い種","赤い蛇","白い世界の橋渡し","青い手","黄色い星","赤い月","白い犬","青い猿","黄色い人","赤い空歩く者","白い魔法使い","青い鷲","黄色い戦士","赤い地球","白い鏡","青い嵐","黄色い太陽"];
 const GINGA = ["音1（磁気）","音2（月）","音3（電気）","音4（自己存在）","音5（倍音）","音6（リズム）","音7（共鳴）","音8（銀河）","音9（太陽）","音10（惑星）","音11（スペクトル）","音12（水晶）","音13（宇宙）"];
 const KIN_LIST = Array.from({length:260},(_,i)=>`KIN${i+1}`);
@@ -38,13 +38,28 @@ export default function App() {
     try {
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method:"POST",
-        headers:{ "Content-Type":"application/json", "x-api-key": apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:2000, system:pat.system, messages:[{role:"user",content}] })
+        headers:{
+          "Content-Type":"application/json",
+          "x-api-key": apiKey,
+          "anthropic-version":"2023-06-01",
+          "anthropic-dangerous-direct-browser-access":"true"
+        },
+        body: JSON.stringify({
+          model:"claude-opus-4-5",
+          max_tokens:2000,
+          system: pat.system,
+          messages:[{ role:"user", content }]
+        })
       });
       const data = await res.json();
-      setResult(data.content?.map(i=>i.text||"").join("")||"生成に失敗しました。");
+      if (data.error) {
+        setResult(`エラー：${data.error.message}`);
+      } else {
+        const text = data.content?.map(i=>i.text||"").join("") || "生成に失敗しました。";
+        setResult(text);
+      }
     } catch(e) {
-      setResult("エラーが発生しました。もう一度お試しください。");
+      setResult(`エラー詳細：${e.message}`);
     } finally { setLoading(false); }
   };
 
@@ -60,7 +75,6 @@ export default function App() {
           <p style={{fontSize:"14px",color:"#64748b",margin:0}}>データを入力するだけで、あなただけの鑑定文が生成されます</p>
         </div>
 
-        {/* STEP 1 */}
         {step===1 && (
           <div>
             <div style={{fontSize:"12px",color:"#94a3b8",letterSpacing:"0.1em",marginBottom:"16px",textAlign:"center",fontWeight:"600"}}>STEP 1 ｜ 鑑定スタイルを選んでください</div>
@@ -84,7 +98,6 @@ export default function App() {
           </div>
         )}
 
-        {/* STEP 2 */}
         {step===2 && (
           <div style={{background:"#fff",borderRadius:"20px",padding:"28px",boxShadow:"0 4px 24px rgba(0,0,0,0.08)"}}>
             <div style={{fontSize:"12px",color:"#94a3b8",letterSpacing:"0.1em",marginBottom:"6px",textAlign:"center",fontWeight:"600"}}>STEP 2 ｜ マヤ暦データを入力</div>
@@ -94,7 +107,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* 基本情報 */}
             <div style={{marginBottom:"24px"}}>
               <div style={{fontSize:"11px",color:"#7c3aed",fontWeight:"700",letterSpacing:"0.1em",marginBottom:"12px",paddingBottom:"8px",borderBottom:"2px solid #ede9fe"}}>基本情報</div>
               <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
@@ -146,44 +158,24 @@ export default function App() {
               </div>
             </div>
 
-            {/* 相関KIN */}
             <div style={{marginBottom:"24px"}}>
               <div style={{fontSize:"11px",color:"#7c3aed",fontWeight:"700",letterSpacing:"0.1em",marginBottom:"12px",paddingBottom:"8px",borderBottom:"2px solid #ede9fe"}}>相関KIN（わかる範囲でOK）</div>
               <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
-                  <div>
-                    <div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>ガイドKIN</div>
-                    <input value={form.guide} onChange={set("guide")} placeholder="例：KIN13" style={inpStyle} />
-                  </div>
-                  <div>
-                    <div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>反対KIN</div>
-                    <input value={form.hantai} onChange={set("hantai")} placeholder="例：KIN118" style={inpStyle} />
-                  </div>
+                  <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>ガイドKIN</div><input value={form.guide} onChange={set("guide")} placeholder="例：KIN13" style={inpStyle}/></div>
+                  <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>反対KIN</div><input value={form.hantai} onChange={set("hantai")} placeholder="例：KIN118" style={inpStyle}/></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
-                  <div>
-                    <div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>神秘KIN</div>
-                    <input value={form.shinpi} onChange={set("shinpi")} placeholder="例：KIN221" style={inpStyle} />
-                  </div>
-                  <div>
-                    <div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>類似KIN</div>
-                    <input value={form.ruiji} onChange={set("ruiji")} placeholder="例：KIN83" style={inpStyle} />
-                  </div>
+                  <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>神秘KIN</div><input value={form.shinpi} onChange={set("shinpi")} placeholder="例：KIN221" style={inpStyle}/></div>
+                  <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>類似KIN</div><input value={form.ruiji} onChange={set("ruiji")} placeholder="例：KIN83" style={inpStyle}/></div>
                 </div>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"12px"}}>
-                  <div>
-                    <div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>鏡の向こうKIN</div>
-                    <input value={form.kagami} onChange={set("kagami")} placeholder="例：KIN118" style={inpStyle} />
-                  </div>
-                  <div>
-                    <div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>絶対反対KIN</div>
-                    <input value={form.zettai} onChange={set("zettai")} placeholder="例：KIN1" style={inpStyle} />
-                  </div>
+                  <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>鏡の向こうKIN</div><input value={form.kagami} onChange={set("kagami")} placeholder="例：KIN118" style={inpStyle}/></div>
+                  <div><div style={{fontSize:"12px",color:"#64748b",marginBottom:"6px",fontWeight:"500"}}>絶対反対KIN</div><input value={form.zettai} onChange={set("zettai")} placeholder="例：KIN1" style={inpStyle}/></div>
                 </div>
               </div>
             </div>
 
-            {/* 追加情報 */}
             <div style={{marginBottom:"24px"}}>
               <div style={{fontSize:"11px",color:"#7c3aed",fontWeight:"700",letterSpacing:"0.1em",marginBottom:"12px",paddingBottom:"8px",borderBottom:"2px solid #ede9fe"}}>追加情報（任意）</div>
               <div style={{display:"flex",flexDirection:"column",gap:"12px"}}>
@@ -207,7 +199,6 @@ export default function App() {
           </div>
         )}
 
-        {/* STEP 3 */}
         {step===3 && (
           <div>
             <div style={{fontSize:"12px",color:"#94a3b8",letterSpacing:"0.1em",marginBottom:"20px",textAlign:"center",fontWeight:"600"}}>STEP 3 ｜ 鑑定結果</div>
